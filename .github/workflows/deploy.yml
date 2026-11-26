@@ -34,7 +34,12 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: 构建生产版本
-        run: npm run build
+        run: |
+          set +e
+          npm run build 2>&1 | tee /tmp/build.log
+          code=${PIPESTATUS[0]}
+          echo "::warning::BUILD_EXIT=$code LOG=$(tr '\n' ' ' < /tmp/build.log | head -c 2000)"
+          exit $code
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
