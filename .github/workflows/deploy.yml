@@ -32,6 +32,14 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
+      - name: 诊断环境
+        run: |
+          echo "::notice::NODE=$(node -v) NPM=$(npm -v)"
+          echo "::notice::ROOTFILES=$(ls | tr '\n' ' ')"
+          echo "::notice::LOCK_BYTES=$(wc -c < package-lock.json)"
+          echo "::notice::VITE_EXISTS=$(test -f node_modules/.bin/vite && echo yes || echo no)"
+          echo "::notice::PKG=$(tr -d '\n' < package.json)"
+
       - name: 构建生产版本
         run: npm run build
 
