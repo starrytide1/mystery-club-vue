@@ -41,7 +41,13 @@ jobs:
           echo "::notice::PKG=$(tr -d '\n' < package.json)"
 
       - name: 构建生产版本
-        run: npm run build
+        run: |
+          set +e
+          npm run build 2>&1 | tee /tmp/build.log
+          code=${PIPESTATUS[0]}
+          echo "::notice::BUILD_EXIT=$code"
+          echo "::notice::BUILD_LOG=$(tr '\n' ' ' < /tmp/build.log | head -c 3000)"
+          exit $code
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
