@@ -29,17 +29,15 @@ jobs:
           node-version: 22
 
       - name: 安装依赖
-        # 用 npm install 而非 npm ci：lock 文件在 Windows 生成，
-        # 缺少 Linux 原生包 @rollup/rollup-linux-x64-gnu，npm ci 会导致构建失败。
-        run: npm install --no-audit --no-fund
+        # package-lock.json 在 Windows 生成，只锁定了 win32 版的 rollup 原生包，
+        # Linux 上会缺 @rollup/rollup-linux-x64-gnu 导致构建失败。
+        # 删掉 lock 让 npm 在本机重新解析，生成正确的平台原生包。
+        run: |
+          rm -f package-lock.json
+          npm install --no-audit --no-fund
 
       - name: 构建生产版本
-        run: |
-          set +e
-          npm run build 2>&1 | tee /tmp/build.log
-          code=${PIPESTATUS[0]}
-          echo "::warning::BUILD_EXIT=$code LOG=$(tr '\n' ' ' < /tmp/build.log | head -c 2000)"
-          exit $code
+        run: npm run build
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
