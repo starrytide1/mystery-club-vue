@@ -27,27 +27,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: 安装依赖
-        run: npm ci
-
-      - name: 诊断环境
-        run: |
-          echo "::notice::NODE=$(node -v) NPM=$(npm -v)"
-          echo "::notice::ROOTFILES=$(ls | tr '\n' ' ')"
-          echo "::notice::LOCK_BYTES=$(wc -c < package-lock.json)"
-          echo "::notice::VITE_EXISTS=$(test -f node_modules/.bin/vite && echo yes || echo no)"
-          echo "::notice::PKG=$(tr -d '\n' < package.json)"
+        # 用 npm install 而非 npm ci：lock 文件在 Windows 生成，
+        # 缺少 Linux 原生包 @rollup/rollup-linux-x64-gnu，npm ci 会导致构建失败。
+        run: npm install --no-audit --no-fund
 
       - name: 构建生产版本
-        run: |
-          set +e
-          npm run build 2>&1 | tee /tmp/build.log
-          code=${PIPESTATUS[0]}
-          echo "::notice::BUILD_EXIT=$code"
-          echo "::notice::BUILD_LOG=$(tr '\n' ' ' < /tmp/build.log | head -c 3000)"
-          exit $code
+        run: npm run build
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
@@ -64,6 +51,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: 部署到 GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
